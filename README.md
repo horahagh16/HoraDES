@@ -4,7 +4,6 @@
 HoraDES is a custom implementation of a cryptographic algorithm inspired by the Data Encryption Standard (DES). It features an 80-bit plaintext input and a 72-bit key, and it incorporates elements such as initial and final permutations, expansion functions, and substitution boxes (S-boxes). This implementation showcases the principles of the Feistel network, allowing both encryption and decryption through similar processes.
 
 ## Features
-- **Hashing**: Converts input strings to a 160-bit binary format using SHA-1 and truncates to the required length.
 - **Initial and Final Permutations**: Uses custom permutation tables for the initial and final permutations of the plaintext.
 - **Key Expansion**: Generates subkeys using the provided key and permutation tables.
 - **Feistel Structure**: Implements a 16-round Feistel structure for encryption.
@@ -40,9 +39,6 @@ print(encrypted_text)
 
 ### Functions
 
-#### `hash_string_to_160_bits(input_string)`
-Creates a SHA-1 hash of the input string and returns the first 160 bits as a binary string.
-
 #### `apply_permutation(input_bits, permutation_table)`
 Applies a given permutation table to the input bits.
 
@@ -62,7 +58,7 @@ Computes the function `f` used in the Feistel structure, which includes expansio
 Encrypts an 80-bit plaintext using the HoraDES algorithm and the provided key.
 
 #### `main(plaintext, key)`
-Hashes the plaintext, splits it into two 80-bit blocks, and encrypts each block using HoraDES. Returns the concatenated ciphertext.
+Hashes the plaintext, splits it into  80-bit blocks, and encrypts each block using HoraDES. Returns the concatenated ciphertext.
 
 ## Author
 This script was developed by Hora Haghighatkhah. Feel free to contribute by submitting pull requests or opening issues.
