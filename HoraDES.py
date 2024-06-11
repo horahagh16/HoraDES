@@ -1,5 +1,4 @@
-def apply_permutation(input_bits, permutation_table):
-    return ''.join(input_bits[i-1] for i in permutation_table)
+import hashlib
 
 # DES Initial Permutation Table
 IP = [
@@ -22,18 +21,12 @@ IP_1 = [24, 46, 43, 12, 21, 10, 17, 13, 27, 71,
          45, 74, 20, 57, 53, 70, 44, 37, 61, 34, 
          7, 33, 50, 55, 60, 14, 80, 63]
 
-FINAL = [12, 11, 28, 16, 15, 31, 9, 26, 
-         6, 3, 25, 37, 27, 22, 13, 4, 
-         2, 33, 14, 34, 18, 10, 23, 35, 
-         36, 30, 32, 21, 20, 29, 19, 24, 
-         1, 32, 39, 38, 7, 5, 17, 8]
-         
-plaintext_bin = "01001000010000010100011101001000010010010100011101001000010000010000101000111010"
+FINAL_P = [12, 11, 28, 16, 15, 31, 9, 26, 
+            6, 3, 25, 37, 27, 22, 13, 4, 
+            2, 33, 14, 34, 18, 10, 23, 35, 
+            36, 30, 32, 21, 20, 29, 19, 24, 
+            1, 32, 39, 38, 7, 5, 17, 8]
 
-# Apply initial permutation
-permuted_plaintext = apply_permutation(plaintext_bin, IP)
-
-# For each round
 # Expansion table E
 E = [
      3,  1,  2,  3,  4,  5,  3,
@@ -46,14 +39,7 @@ E = [
     38, 36, 37, 38, 39, 40, 38
 ]
 
-# Right half of the initial permuted plaintext (last 40 bits)
-right_half = permuted_plaintext[40:]
-
-# Expand the right half from 40 to 56 bits
-expanded_right = apply_permutation(right_half, E)
-print(expanded_right)
-
-# DES Key permutation tables PC-1 and PC-2, and number of left shifts for each round
+# DES Key permutation tables PC-1 and PC-2, and number of right shifts for each round
 PC1 = [1, 46, 58, 34, 60, 10, 67, 30, 
        28, 68, 2, 38, 41, 55, 56, 14, 
        24, 22, 21, 59, 11, 45, 49, 52, 
@@ -63,42 +49,16 @@ PC1 = [1, 46, 58, 34, 60, 10, 67, 30,
        16, 39, 33, 37, 32, 36, 19, 4, 
        62, 8, 26, 69, 63, 25, 53, 64]
 
-PC2 = [67, 51, 30, 46, 54, 14, 11, 5, 55, 43, 28, 21, 65, 35, 47, 34, 40, 7, 23, 33, 20, 31, 10, 8, 42, 22, 66, 44, 
-       45, 18, 15, 49, 12, 38, 60, 69, 2, 56, 3, 32, 62, 58, 6, 71, 37, 59, 27, 48, 63, 17, 9, 13, 53, 68, 41, 70]
+PC2 = [16, 21, 32, 52, 53, 39, 46, 6, 14, 23, 13, 54, 0, 15,
+        57, 2, 25, 42, 55, 48, 51, 8, 18, 17, 63, 38, 24, 1,
+       41, 4, 26, 27, 56, 59, 45, 12, 47, 30, 11, 19, 7, 3, 
+       50, 62, 28, 20, 9, 44, 37, 35, 29, 34, 10, 49, 5, 40]
 
-# Number of right shifts for each round
-shifts = [1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2]
+SHIFTS = [1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2]
 
-# Given 64-bit key
-key_bin = "011000100110010101101000011001010111001101101000011101000110100110100011"
-
-# Apply PC-1 to reduce and permute the 64-bit key to 56 bits
-key_pc1 = apply_permutation(key_bin, PC1)
-print(key_pc1)
-
-# Split the key into two halves
-left_key = key_pc1[:32]
-right_key = key_pc1[32:]
-
-# Function to rotate the key halves
-def rotate_right(key_half, shifts):
-    return key_half[:shifts] + key_half[shifts:] 
-
-# Rotate both halves according to the first round shift count
-left_key_rot = rotate_right(left_key, shifts[0])
-right_key_rot = rotate_right(right_key, shifts[0])
-
-# Combine the halves and apply PC-2 to generate the first subkey
-combined_key_rot = left_key_rot + right_key_rot
-subkey1 = apply_permutation(combined_key_rot, PC2)
-print(subkey1)
-
-# XOR expanded right half with the subkey
-xored = ''.join(str(int(a) ^ int(b)) for a, b in zip(expanded_right, subkey1))
-print(xored)
 
 # Define S-boxes
-S_boxes = [[[11,32, 4, 1, 29, 30, 5, 17, 15, 10, 7, 8, 3, 26, 9, 12, 18, 2, 21, 16, 31, 6, 13, 23, 20, 14, 22, 25, 27, 24, 28, 19],
+S_BOXES = [[[11,32, 4, 1, 29, 30, 5, 17, 15, 10, 7, 8, 3, 26, 9, 12, 18, 2, 21, 16, 31, 6, 13, 23, 20, 14, 22, 25, 27, 24, 28, 19],
             [9, 20, 18, 15, 1, 21, 11, 10, 6, 22, 19, 31, 5, 14, 30, 7, 12, 26, 25, 4, 23, 8, 13, 24, 17, 27, 16, 3,32, 2, 28, 29], 
             [4, 16, 25, 18, 1, 31, 23, 7, 12, 6, 24, 20, 11, 9, 29, 17, 19, 14, 30, 2, 26, 21, 3,32, 5, 28, 8, 13, 15, 10, 27, 22], 
             [19, 25, 28, 6,32, 3, 5, 29, 31, 1, 18, 27, 26, 15, 30, 10, 2, 4, 13, 20, 7, 17, 24, 14, 16, 11, 23, 22, 12, 9, 21, 8]], 
@@ -139,30 +99,108 @@ S_boxes = [[[11,32, 4, 1, 29, 30, 5, 17, 15, 10, 7, 8, 3, 26, 9, 12, 18, 2, 21, 
             [19, 7, 22, 5, 26, 24, 14, 18, 4, 11, 6, 16, 21, 20, 25, 23, 29, 2, 28,32, 27, 30, 8, 10, 31, 17, 12, 15, 3, 13, 1, 9]]]
 
 
+def hash_string_to_160_bits(input_string):
+    # Create a SHA-1 hash object
+    sha1 = hashlib.sha1()
+    
+    # Update the hash object with the bytes of the input string
+    sha1.update(input_string.encode())
+    
+    # Get the digest of the hash (SHA-1 produces 160 bits)
+    full_hash = sha1.digest()
+    
+    # Convert the first 10 bytes (80 bits) to binary
+    binary_output = ''.join(format(byte, '08b') for byte in full_hash)
+    
+    return binary_output
+
+def apply_permutation(input_bits, permutation_table):
+    return ''.join(input_bits[i-1] for i in permutation_table)
+
+# Function to rotate the key halves
+def rotate_right(key_half, shifts):
+    return key_half[:shifts] + key_half[shifts:] 
+
+def generate_subkey(Key_72, round = 16):
+    # Apply PC-1 to reduce and permute the 64-bit key to 56 bits
+    key_pc1 = apply_permutation(Key_72, PC1)
+    sub_keys = []
+    for i in range(round):
+        # Split the key into two halves
+        left_key = key_pc1[:32]
+        right_key = key_pc1[32:]
+
+        # Rotate both halves according to the first round shift count
+        left_key_rot = rotate_right(left_key, SHIFTS[i])
+        right_key_rot = rotate_right(right_key, SHIFTS[i])      
+
+        # Combine the halves and apply PC-2 to generate the ith subkey
+        combined_key_rot = left_key_rot + right_key_rot
+        subkey_i = apply_permutation(combined_key_rot, PC2)
+
+        sub_keys.append(subkey_i)
+    return sub_keys
+
 # Function to apply S-boxes
 def apply_sbox(input_bits, sbox):
-    row = int(input_bits[0] + input_bits[5], 2)  # Convert outer bits to int
-    column = int(input_bits[1:5], 2)  # Convert middle 4 bits to int
+    row = int(input_bits[0] + input_bits[6], 2)  # Convert outer bits to int
+    column = int(input_bits[1:6], 2)  # Convert middle 5 bits to int
     sbox_output = sbox[row][column]
-    return format(sbox_output, '05b')  # Convert to 4-bit binary
+    return format(sbox_output, '05b')  # Convert to 5-bit binary
 
-# Split the XORed result into 8 blocks of 6 bits and apply each S-box
-sbox_outputs = []
-for i in range(8):
-    sbox_input = xored[i*7:(i+1)*7]
-    sbox_output = apply_sbox(sbox_input, S_boxes[i])
-    sbox_outputs.append(sbox_output)
+# Function to calculate f(Rn-1, Kn)
+def f_function(right_half_40, subkey_56):
+    # Expand the right half from 40 to 56 bits
+    expanded_right = apply_permutation(right_half_40, E)
 
-# Combine all S-box outputs into one 40-bit string
-combined_sbox_output = ''.join(sbox_outputs)
-#print(combined_sbox_output)
+    # XOR expanded right half with the subkey
+    xored = ''.join(str(int(a) ^ int(b)) for a, b in zip(expanded_right, subkey_56))
+    
+    # Split the XORed result into 8 blocks of 6 bits and apply each S-box
+    sbox_outputs = []
+    for i in range(8):
+        sbox_input = xored[i*7:(i+1)*7]
+        sbox_output = apply_sbox(sbox_input, S_BOXES[i])
+        sbox_outputs.append(sbox_output)
+
+    # Combine all S-box outputs into one 40-bit string
+    combined_sbox_output = ''.join(sbox_outputs)
+    
+    # Return 40-bit output
+    return apply_permutation(combined_sbox_output, FINAL_P)
 
 
+def HoraDES(plaintext_80, Key_72, round = 16):
+    # Apply initial permutation
+    permuted_plaintext = apply_permutation(plaintext_80, IP) 
 
-permuted = apply_permutation(combined_sbox_output, FINAL)
-print(permuted)
+    right = []
+    left = [] 
 
-xored = ''.join(str(int(a) ^ int(b)) for a, b in zip(permuted_plaintext[:40], permuted))
-print(xored)
+    # Right half and left half of the initial permuted plaintext (last 40 bits)
+    right_half = permuted_plaintext[40:]
+    left_half = permuted_plaintext[:40]
+
+    subkeys = generate_subkey(Key_72)
+    for i in range(round):
+        if i == 0:
+            right.append(''.join(str(int(a) ^ int(b)) for a, b in zip(left_half, f_function(right_half, subkeys[i]))))
+            left.append(right_half)
+        else:
+            right.append(''.join(str(int(a) ^ int(b)) for a, b in zip(left[i-1], f_function(right[i-1], subkeys[i]))))
+            left.append(right[i-1])
+
+    encrypted_text = left[len(left) - 1] + right[len(right) - 1]
+    return apply_permutation(encrypted_text, IP_1)
 
 
+plaintext = 'In cryptography a Feistel cipher also known as LubyRackoff block cipher is a symmetric structure used in the construction of block ciphers named after the German born physicist and cryptographer Horst Feistel who did pioneering research while working for IBM it is also commonly known as a Feistel network A large number of block ciphers use the scheme including the US Data Encryption Standard the Soviet Russian GOST and the more recent Blowfish and Twofish ciphers In a Feistel cipher encryption and decryption are very similar operations and both consist of iteratively running a function called a round function a fixed number of time.'
+key = '011000100110010101101000011001010111001101101000011101000110100110100011'
+
+binary_hash = hash_string_to_160_bits(plaintext)
+
+left_half = binary_hash[80:]
+right_half = binary_hash[:80]
+
+cypher = HoraDES(plaintext_80=left_half,Key_72=key) + HoraDES(plaintext_80=right_half,Key_72=key)
+print('plaintext:',plaintext, '\nEncrypted: ',cypher)
