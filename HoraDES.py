@@ -1,5 +1,3 @@
-import hashlib
-
 # DES Initial Permutation Table
 IP = [
     51, 19, 40, 36, 50, 25, 73, 42, 35, 6,
@@ -99,21 +97,6 @@ S_BOXES = [[[11,32, 4, 1, 29, 30, 5, 17, 15, 10, 7, 8, 3, 26, 9, 12, 18, 2, 21, 
             [19, 7, 22, 5, 26, 24, 14, 18, 4, 11, 6, 16, 21, 20, 25, 23, 29, 2, 28,32, 27, 30, 8, 10, 31, 17, 12, 15, 3, 13, 1, 9]]]
 
 
-def hash_string_to_160_bits(input_string):
-    # Create a SHA-1 hash object
-    sha1 = hashlib.sha1()
-    
-    # Update the hash object with the bytes of the input string
-    sha1.update(input_string.encode())
-    
-    # Get the digest of the hash (SHA-1 produces 160 bits)
-    full_hash = sha1.digest()
-    
-    # Convert the first 10 bytes (80 bits) to binary
-    binary_output = ''.join(format(byte, '08b') for byte in full_hash)
-    
-    return binary_output
-
 def apply_permutation(input_bits, permutation_table):
     return ''.join(input_bits[i-1] for i in permutation_table)
 
@@ -182,7 +165,7 @@ def HoraDES(plaintext_80, Key_72, round = 16):
     left_half = permuted_plaintext[:40]
 
     subkeys = generate_subkey(Key_72)
-    for i in range(16):
+    for i in range(round):
         if i == 0:
             right.append(''.join(str(int(a) ^ int(b)) for a, b in zip(left_half, f_function(right_half, subkeys[i]))))
             left.append(right_half)
@@ -193,15 +176,30 @@ def HoraDES(plaintext_80, Key_72, round = 16):
     encrypted_text = left[len(left) - 1] + right[len(right) - 1]
     return apply_permutation(encrypted_text, IP_1)
 
-def main(plaintext , key):
-    binary_hash = hash_string_to_160_bits(plaintext)
+def main(plaintext: str , key):
+    plaintext = plaintext.replace(' ','')
 
-    left_half = binary_hash[80:]
-    right_half = binary_hash[:80]
+    # Calculate the length of the input string
+    original_length = len(plaintext)
     
-    cypher = HoraDES(plaintext_80=left_half,Key_72=key) + HoraDES(plaintext_80=right_half,Key_72=key)
+    # Determine the number of characters needed to make the length divisible by 10 char (80-bit)
+    remainder = original_length % 10
+    if remainder != 0:
+        padding_length = 10 - remainder
+        plaintext += 'z' * padding_length
 
-    return cypher
+    plaintext = ''.join(format(ord(char), '08b') for char in plaintext)  
+
+    # Split the padded string into chunks of 80 bits
+    chunks = [plaintext[i:i+80] for i in range(0, len(plaintext), 80)]
+    
+    # Apply the HoraDES function to each chunk
+    processed_chunks = [HoraDES(plaintext_80=chunk, Key_72=key) for chunk in chunks]
+    
+    # Combine the processed chunks into a single string
+    result_string = ''.join(processed_chunks)
+    
+    return result_string
 
 plaintext = 'In cryptography a Feistel cipher also known as LubyRackoff block cipher is a symmetric structure used in the construction of block ciphers named after the German born physicist and cryptographer Horst Feistel who did pioneering research while working for IBM it is also commonly known as a Feistel network A large number of block ciphers use the scheme including the US Data Encryption Standard the Soviet Russian GOST and the more recent Blowfish and Twofish ciphers In a Feistel cipher encryption and decryption are very similar operations and both consist of iteratively running a function called a round function a fixed number of time.'
 key = '011000100110010101101000011001010111001101101000011101000110100110100011'
