@@ -182,7 +182,7 @@ def HoraDES(plaintext_80, Key_72, round = 16):
     left_half = permuted_plaintext[:40]
 
     subkeys = generate_subkey(Key_72)
-    for i in range(round):
+    for i in range(16):
         if i == 0:
             right.append(''.join(str(int(a) ^ int(b)) for a, b in zip(left_half, f_function(right_half, subkeys[i]))))
             left.append(right_half)
@@ -193,14 +193,18 @@ def HoraDES(plaintext_80, Key_72, round = 16):
     encrypted_text = left[len(left) - 1] + right[len(right) - 1]
     return apply_permutation(encrypted_text, IP_1)
 
+def main(plaintext , key):
+    binary_hash = hash_string_to_160_bits(plaintext)
+
+    left_half = binary_hash[80:]
+    right_half = binary_hash[:80]
+    
+    cypher = HoraDES(plaintext_80=left_half,Key_72=key) + HoraDES(plaintext_80=right_half,Key_72=key)
+
+    return cypher
 
 plaintext = 'In cryptography a Feistel cipher also known as LubyRackoff block cipher is a symmetric structure used in the construction of block ciphers named after the German born physicist and cryptographer Horst Feistel who did pioneering research while working for IBM it is also commonly known as a Feistel network A large number of block ciphers use the scheme including the US Data Encryption Standard the Soviet Russian GOST and the more recent Blowfish and Twofish ciphers In a Feistel cipher encryption and decryption are very similar operations and both consist of iteratively running a function called a round function a fixed number of time.'
 key = '011000100110010101101000011001010111001101101000011101000110100110100011'
 
-binary_hash = hash_string_to_160_bits(plaintext)
-
-left_half = binary_hash[80:]
-right_half = binary_hash[:80]
-
-cypher = HoraDES(plaintext_80=left_half,Key_72=key) + HoraDES(plaintext_80=right_half,Key_72=key)
+cypher = main(plaintext = plaintext,key = key)
 print('plaintext:',plaintext, '\nEncrypted: ',cypher)
