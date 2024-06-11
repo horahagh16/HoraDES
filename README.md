@@ -1,5 +1,4 @@
 # HoraDES
-# HoraDES: A Python Implementation of DES with Custom Hashing
 
 ## Overview
 HoraDES is a custom implementation of a cryptographic algorithm inspired by the Data Encryption Standard (DES). It features an 80-bit plaintext input and a 72-bit key, and it incorporates elements such as initial and final permutations, expansion functions, and substitution boxes (S-boxes). This implementation showcases the principles of the Feistel network, allowing both encryption and decryption through similar processes.
