@@ -53,9 +53,6 @@ print(encrypted_message)
   - `HoraDES(plaintext_80, Key_72, round)`: Encrypts an 80-bit block of plaintext using the HoraDES algorithm.
   - `main(plaintext, key)`: Main function to handle plaintext padding, chunking, and encryption.
 
-## Conclusion
-The HoraDES encryption algorithm is a robust implementation of a Feistel cipher, leveraging the principles of DES with custom permutation tables and S-boxes. It provides a secure method for encrypting 80-bit blocks of data using a 72-bit key, making it suitable for various cryptographic applications.
-
 ## Author
 This script was developed by Hora Haghighatkhah. Feel free to contribute by submitting pull requests or opening issues.
 
